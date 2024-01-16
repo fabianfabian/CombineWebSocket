@@ -13,24 +13,24 @@ public class WebSocket {
     }
 
     public func send(_ string: String) -> Future<Void, Error> {
-        Future { completion in
-            self.task.send(.string(string)) { maybeError in
+        Future { [weak self] completion in
+            self?.task.send(.string(string)) { maybeError in
                 completion(maybeError.map(Result.failure) ?? .success(()))
             }
         }
     }
 
     public func send(_ data: Data) -> Future<Void, Error> {
-        Future { completion in
-            self.task.send(.data(data)) { maybeError in
+        Future { [weak self] completion in
+            self?.task.send(.data(data)) { maybeError in
                 completion(maybeError.map(Result.failure) ?? .success(()))
             }
         }
     }
 
     public func ping() -> Future<Void, Error> {
-        Future { completion in
-            self.task.sendPing { maybeError in
+        Future { [weak self] completion in
+            self?.task.sendPing { maybeError in
                 completion(maybeError.map(Result.failure) ?? .success(()))
             }
         }
@@ -41,8 +41,8 @@ public class WebSocket {
             .publish(every: every, on: .main, in: .common)
             .autoconnect()
             .mapError { _ -> Error in }
-            .flatMap(maxPublishers: .max(1)) { _ -> AnyPublisher<Void, Error> in
-                self.ping().eraseToAnyPublisher()
+            .flatMap(maxPublishers: .max(1)) { [weak self] _ -> AnyPublisher<Void, Error> in
+                self?.ping().eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
     }
